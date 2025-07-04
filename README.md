@@ -1,38 +1,29 @@
-# sv
+# Low Setup Guru
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+A universal code testing platform supporting frontend (React/Svelte) and compiled languages (C/C++/Python/etc) using Judge0.
 
-## Creating a project
+## Project Structure
 
-If you're seeing this, you've probably already done this step. Congrats!
+- `frontend/` — SvelteKit + Monaco Editor + Tailwind CSS
+- `backend/` — Node.js Express server (proxies to Judge0)
 
-```bash
-# create a new project in the current directory
-npx sv create
+## Setup
 
-# create a new project in my-app
-npx sv create my-app
+### Frontend
+
 ```
-
-## Developing
-
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
-
-```bash
+cd frontend
+npm install
 npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
 ```
 
-## Building
+### Backend
 
-To create a production version of your app:
-
-```bash
-npm run build
+```
+cd backend
+npm install
+npm run dev
 ```
 
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+## Configuration
+- For Judge0, you may need a RapidAPI key for higher rate limits. See `backend/index.js` for details.
