@@ -1,6 +1,8 @@
+/**
+ * Monaco Editor setup — registers web workers for language services.
+ */
 import * as monaco from 'monaco-editor';
 
-// Import the workers in a production-safe way.
 import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
 import cssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker';
 import htmlWorker from 'monaco-editor/esm/vs/language/html/html.worker?worker';
@@ -29,4 +31,4 @@ self.MonacoEnvironment = {
 	}
 };
 
-export default monaco; 
+export default monaco;

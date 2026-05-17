@@ -1,0 +1,125 @@
+# ============================================================
+# Low Setup Guru — Local Judge0 CE Stack
+# ============================================================
+# Usage:
+#   docker-compose up -d          Start all services
+#   docker-compose logs -f        Watch logs
+#   docker-compose down           Stop all services
+#   docker-compose down -v        Stop and wipe all data
+#
+# Verify Judge0 is running:
+#   curl http://localhost:2358/about
+#   curl http://localhost:2358/languages
+#
+# NOTE: First boot takes 2-3 minutes while Judge0 initializes
+#       its language database. Be patient!
+# ============================================================
+
+x-judge0-env: &judge0-env
+  # --- Database ---
+  POSTGRES_HOST: db
+  POSTGRES_PORT: 5432
+  POSTGRES_USER: judge0
+  POSTGRES_PASSWORD: judge0local
+  POSTGRES_DB: judge0
+
+  # --- Redis ---
+  REDIS_HOST: redis
+  REDIS_PORT: 6379
+  REDIS_PASSWORD: ""
+
+  # --- Rails ---
+  RAILS_ENV: development
+  RAILS_MAX_THREADS: 5
+  SECRET_KEY_BASE: 1234567890abcdef1234567890abcdef1234567890abcdef
+
+  # --- Judge0 Limits ---
+  MAX_QUEUE_SIZE: 100
+  MAX_CPU_TIME_LIMIT: 10
+  MAX_CPU_EXTRA_TIME: 5
+  MAX_WALL_TIME_LIMIT: 20
+  MAX_MEMORY_LIMIT: 256000
+  MAX_STACK_LIMIT: 128000
+  MAX_PROCESSES_AND_OR_THREADS: 60
+  MAX_FILE_SIZE: 1024
+
+  # --- CORS ---
+  ALLOW_ORIGIN: "*"
+
+  # --- Auth (disabled for local dev) ---
+  AUTHN_HEADER: ""
+  AUTHN_TOKEN: ""
+  AUTHZ_HEADER: ""
+  AUTHZ_TOKEN: ""
+
+  # --- Workers ---
+  INTERVAL: 0.1
+  COUNT: 2
+
+services:
+  # --- Judge0 API Server ---
+  server:
+    image: judge0/judge0:1.13.1
+    ports:
+      - "127.0.0.1:2358:2358"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      <<: *judge0-env
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:2358/about"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+
+  # --- Judge0 Workers ---
+  workers:
+    image: judge0/judge0:1.13.1
+    command: ["./scripts/workers"]
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      <<: *judge0-env
+    privileged: true
+    restart: unless-stopped
+
+  # --- PostgreSQL ---
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: judge0
+      POSTGRES_PASSWORD: judge0local
+      POSTGRES_DB: judge0
+    volumes:
+      - judge0-db:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U judge0"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # --- Redis ---
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes --maxmemory 128mb --maxmemory-policy allkeys-lru
+    volumes:
+      - judge0-redis:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  judge0-db:
+  judge0-redis:
