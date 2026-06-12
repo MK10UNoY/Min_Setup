@@ -8,7 +8,7 @@ export interface LanguageInfo {
 	id: number;
 	name: string;
 	extension: string;
-	mode: 'judge0' | 'nodebox' | 'iframe';
+	mode: 'judge0' | 'nodebox' | 'iframe' | 'wasm';
 }
 
 /** Request shape for code execution */
@@ -31,7 +31,7 @@ export interface ExecuteResponse {
 	};
 	time: string;
 	memory: string;
-	executionMode: 'judge0' | 'nodebox' | 'iframe';
+	executionMode: 'judge0' | 'nodebox' | 'iframe' | 'wasm';
 }
 
 /** Internal request used by the NodeboxRunner */

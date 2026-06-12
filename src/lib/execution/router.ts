@@ -3,12 +3,14 @@
  * Routes to the correct backend based on language mode:
  *   - "judge0"  → POST /api/execute (server proxy)
  *   - "nodebox" → NodeboxRunner (in-browser, no server)
+ *   - "wasm"    → In-browser C/C++ via WASM clang/lld (no server)
  *   - "iframe"  → returns { mode: "iframe" } for frontend rendering
  *
  * Also orchestrates terminal + execution store updates.
  */
 import type { LanguageInfo, ExecuteResponse } from './types';
 import { NodeboxRunner } from './nodeboxRunner';
+import { runCpp, cleanupCppRunner } from './wasmRunners/cppRunner';
 import { cleanOutput } from '$lib/utils/ansiStripper';
 import { executionStore } from '$lib/stores/executionStore';
 import { terminalStore } from '$lib/stores/terminalStore';
@@ -73,16 +75,18 @@ export function getLanguageIdFromFilename(filename: string): number {
 }
 
 /** Get the execution mode for a filename */
-export function getExecutionMode(filename: string): 'judge0' | 'nodebox' | 'iframe' | 'none' {
+export function getExecutionMode(filename: string): 'judge0' | 'nodebox' | 'wasm' | 'iframe' | 'none' {
 	const ext = filename.split('.').pop()?.toLowerCase() ?? '';
 	const NODEBOX_EXTS = new Set(['js', 'mjs', 'cjs', 'ts', 'tsx']);
+	const WASM_EXTS = new Set(['c', 'h', 'cpp', 'cc', 'hpp']);
 	const IFRAME_EXTS = new Set(['html', 'htm', 'css']);
 	const JUDGE0_EXTS = new Set([
-		'py', 'c', 'h', 'cpp', 'cc', 'hpp', 'java', 'go', 'rs', 'rb',
+		'py', 'java', 'go', 'rs', 'rb',
 		'php', 'sh', 'lua', 'cs', 'kt', 'r', 'scala', 'sql', 'swift', 'pl'
 	]);
 
 	if (NODEBOX_EXTS.has(ext)) return 'nodebox';
+	if (WASM_EXTS.has(ext)) return 'wasm';
 	if (IFRAME_EXTS.has(ext)) return 'iframe';
 	if (JUDGE0_EXTS.has(ext)) return 'judge0';
 	return 'none';
@@ -157,6 +161,38 @@ async function executeViaNodebox(
 	};
 }
 
+// ─── Execute via WASM (C/C++ in-browser) ────────────────────
+
+async function executeViaWasm(
+	code: string,
+	filename: string
+): Promise<ExecuteResponse> {
+	const ext = filename.split('.').pop()?.toLowerCase() ?? 'cpp';
+	const lang: 'c' | 'cpp' = (ext === 'c' || ext === 'h') ? 'c' : 'cpp';
+	const startTime = performance.now();
+
+	const result = await runCpp(code, lang);
+
+	const elapsed = performance.now() - startTime;
+	const timeStr = elapsed < 1000
+		? `${Math.round(elapsed)}ms`
+		: `${(elapsed / 1000).toFixed(3)}s`;
+
+	return {
+		success: result.exitCode === 0,
+		stdout: result.stdout,
+		stderr: result.stderr,
+		compile_output: '',
+		status: {
+			id: result.exitCode === 0 ? 3 : 1,
+			description: result.exitCode === 0 ? 'Accepted' : 'Compilation/Runtime Error'
+		},
+		time: timeStr,
+		memory: '0 KB',
+		executionMode: 'wasm'
+	};
+}
+
 // ─── Main Execution Entry Point ─────────────────────────────
 
 /**
@@ -213,7 +249,9 @@ export async function executeCode(
 	try {
 		let result: ExecuteResponse;
 
-		if (mode === 'nodebox') {
+		if (mode === 'wasm') {
+			result = await executeViaWasm(code, filename);
+		} else if (mode === 'nodebox') {
 			result = await executeViaNodebox(code, filename, stdin);
 		} else {
 			result = await executeViaJudge0(code, languageId, stdin);
@@ -262,7 +300,7 @@ export async function executeCode(
 			status: { id: -1, description: 'Error' },
 			time: '0s',
 			memory: '0 KB',
-			executionMode: mode === 'nodebox' ? 'nodebox' : 'judge0'
+			executionMode: mode === 'wasm' ? 'wasm' : mode === 'nodebox' ? 'nodebox' : 'judge0'
 		};
 	}
 }
@@ -270,4 +308,5 @@ export async function executeCode(
 /** Cleanup all runners (call on component destroy) */
 export function cleanupRunners(): void {
 	nodeboxRunner.cleanup?.();
+	cleanupCppRunner();
 }

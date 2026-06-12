@@ -9,9 +9,9 @@ import type { LanguageInfo } from '$lib/execution/types';
 
 const LANGUAGES: LanguageInfo[] = [
 	{ id: 46, name: 'Bash', extension: 'sh', mode: 'judge0' },
-	{ id: 50, name: 'C', extension: 'c', mode: 'judge0' },
+	{ id: 50, name: 'C', extension: 'c', mode: 'wasm' },
 	{ id: 51, name: 'C#', extension: 'cs', mode: 'judge0' },
-	{ id: 54, name: 'C++', extension: 'cpp', mode: 'judge0' },
+	{ id: 54, name: 'C++', extension: 'cpp', mode: 'wasm' },
 	{ id: 60, name: 'Go', extension: 'go', mode: 'judge0' },
 	{ id: 62, name: 'Java', extension: 'java', mode: 'judge0' },
 	{ id: 63, name: 'JavaScript', extension: 'js', mode: 'nodebox' },
@@ -22,7 +22,7 @@ const LANGUAGES: LanguageInfo[] = [
 	{ id: 72, name: 'Ruby', extension: 'rb', mode: 'judge0' },
 	{ id: 73, name: 'Rust', extension: 'rs', mode: 'judge0' },
 	{ id: 74, name: 'TypeScript', extension: 'ts', mode: 'nodebox' },
-	{ id: 76, name: 'C++ 17', extension: 'cpp', mode: 'judge0' },
+	{ id: 76, name: 'C++ 17', extension: 'cpp', mode: 'wasm' },
 	{ id: 78, name: 'Kotlin', extension: 'kt', mode: 'judge0' },
 	{ id: 80, name: 'R', extension: 'r', mode: 'judge0' },
 	{ id: 81, name: 'Scala', extension: 'scala', mode: 'judge0' },
