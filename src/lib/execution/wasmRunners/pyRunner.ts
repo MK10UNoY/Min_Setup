@@ -1,16 +1,15 @@
 // src/lib/execution/wasmRunners/pyRunner.ts
-// Coordinates the Pyodide Web Worker.
-
-import PyWorker from './py.worker?worker';
+import { browser } from '$app/environment';
 import type { CppRunResult } from './types';
 
 let worker: Worker | null = null;
 let idCounter = 0;
 const pending = new Map<string, { resolve: (r: CppRunResult) => void }>();
 
-function getWorker(): Worker {
+function getWorker(): Worker | null {
+	if (!browser) return null;
 	if (!worker) {
-		worker = new PyWorker();
+		worker = new Worker(new URL('./py.worker.ts', import.meta.url), { type: 'classic' });
 		worker.onmessage = (e: MessageEvent) => {
 			const { id, stdout, stderr, exitCode } = e.data;
 			const entry = pending.get(id);
@@ -33,9 +32,17 @@ function getWorker(): Worker {
 
 export function runPython(code: string, stdin = ''): Promise<CppRunResult> {
 	return new Promise((resolve) => {
+		const activeWorker = getWorker();
+		if (!activeWorker) {
+			return resolve({
+				stdout: '',
+				stderr: 'Cannot run code on the server.',
+				exitCode: 1
+			});
+		}
 		const id = String(++idCounter);
 		pending.set(id, { resolve });
-		getWorker().postMessage({ id, code, stdin });
+		activeWorker.postMessage({ id, code, stdin });
 	});
 }
 

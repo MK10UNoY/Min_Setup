@@ -1,16 +1,15 @@
 // src/lib/execution/wasmRunners/jsRunner.ts
-// Mirrors cppRunner.ts — same singleton worker pattern.
-
-import JsWorker from './js.worker?worker';
-import type { CppRunResult } from './types'; // reuse same shape
+import { browser } from '$app/environment';
+import type { CppRunResult } from './types';
 
 let worker: Worker | null = null;
 let idCounter = 0;
 const pending = new Map<string, { resolve: (r: CppRunResult) => void }>();
 
-function getWorker(): Worker {
+function getWorker(): Worker | null {
+	if (!browser) return null;
 	if (!worker) {
-		worker = new JsWorker();
+		worker = new Worker(new URL('./js.worker.ts', import.meta.url), { type: 'classic' });
 		worker.onmessage = (e: MessageEvent) => {
 			const { id, stdout, stderr, exitCode } = e.data;
 			const entry = pending.get(id);
@@ -33,9 +32,17 @@ function getWorker(): Worker {
 
 export function runJS(code: string, lang: 'js' | 'ts' = 'js', stdin = ''): Promise<CppRunResult> {
 	return new Promise((resolve) => {
+		const activeWorker = getWorker();
+		if (!activeWorker) {
+			return resolve({
+				stdout: '',
+				stderr: 'Cannot run code on the server.',
+				exitCode: 1
+			});
+		}
 		const id = String(++idCounter);
 		pending.set(id, { resolve });
-		getWorker().postMessage({ id, code, lang, stdin });
+		activeWorker.postMessage({ id, code, lang, stdin });
 	});
 }
 

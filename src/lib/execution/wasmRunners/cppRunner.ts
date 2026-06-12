@@ -1,21 +1,15 @@
-/**
- * C/C++ WASM Runner — thin wrapper that spins up a Web Worker
- * and resolves a promise when the compilation+execution completes.
- *
- * The heavy lifting (loading clang/lld WASM, compiling, linking, running)
- * happens entirely inside the worker thread to avoid blocking the UI.
- */
-import CppWorker from './cpp.worker?worker';
+// src/lib/execution/wasmRunners/cppRunner.ts
+import { browser } from '$app/environment';
 import type { CppRunResult } from './types';
 
-// Keep a single worker instance alive across runs (reuse loaded WASM modules)
 let worker: Worker | null = null;
 let idCounter = 0;
-const pending = new Map<string, { resolve: (r: CppRunResult) => void; reject: (e: Error) => void }>();
+const pending = new Map<string, { resolve: (r: CppRunResult) => void; reject?: (e: Error) => void }>();
 
-function getWorker(): Worker {
+function getWorker(): Worker | null {
+	if (!browser) return null;
 	if (!worker) {
-		worker = new CppWorker();
+		worker = new Worker(new URL('./cpp.worker.ts', import.meta.url), { type: 'classic' });
 		worker.onmessage = (e: MessageEvent) => {
 			const { id, stdout, stderr, exitCode } = e.data;
 			const entry = pending.get(id);
@@ -26,7 +20,6 @@ function getWorker(): Worker {
 		};
 		worker.onerror = (e) => {
 			const msg = (e as ErrorEvent).message || 'Failed to load or execute worker script (check console / CORS / CSP / path)';
-			// Reject all pending on fatal worker crash
 			for (const [id, entry] of pending) {
 				entry.resolve({
 					stdout: '',
@@ -35,25 +28,28 @@ function getWorker(): Worker {
 				});
 				pending.delete(id);
 			}
-			worker = null; // allow recreation next run
+			worker = null;
 		};
 	}
 	return worker;
 }
 
-/**
- * Run C or C++ code in-browser via WASM clang/lld.
- * Returns { stdout, stderr, exitCode } matching the existing execution shape.
- */
 export function runCpp(code: string, lang: 'c' | 'cpp' = 'cpp', stdin: string = ''): Promise<CppRunResult> {
 	return new Promise((resolve, reject) => {
+		const activeWorker = getWorker();
+		if (!activeWorker) {
+			return resolve({
+				stdout: '',
+				stderr: 'Cannot run code on the server.',
+				exitCode: 1
+			});
+		}
 		const id = String(++idCounter);
 		pending.set(id, { resolve, reject });
-		getWorker().postMessage({ id, code, lang, stdin });
+		activeWorker.postMessage({ id, code, lang, stdin });
 	});
 }
 
-/** Destroy the worker and release WASM memory */
 export function cleanupCppRunner(): void {
 	if (worker) {
 		worker.terminate();
