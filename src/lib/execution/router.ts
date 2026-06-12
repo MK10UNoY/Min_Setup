@@ -11,6 +11,8 @@
 import type { LanguageInfo, ExecuteResponse } from './types';
 import { NodeboxRunner } from './nodeboxRunner';
 import { runCpp, cleanupCppRunner } from './wasmRunners/cppRunner';
+import { runJS, cleanupJsRunner } from './wasmRunners/jsRunner';
+import { runPython, cleanupPyRunner } from './wasmRunners/pyRunner';
 import { cleanOutput } from '$lib/utils/ansiStripper';
 import { executionStore } from '$lib/stores/executionStore';
 import { terminalStore } from '$lib/stores/terminalStore';
@@ -78,10 +80,10 @@ export function getLanguageIdFromFilename(filename: string): number {
 export function getExecutionMode(filename: string): 'judge0' | 'nodebox' | 'wasm' | 'iframe' | 'none' {
 	const ext = filename.split('.').pop()?.toLowerCase() ?? '';
 	const NODEBOX_EXTS = new Set(['js', 'mjs', 'cjs', 'ts', 'tsx']);
-	const WASM_EXTS = new Set(['c', 'h', 'cpp', 'cc', 'hpp']);
+	const WASM_EXTS = new Set(['c', 'h', 'cpp', 'cc', 'hpp', 'py']);
 	const IFRAME_EXTS = new Set(['html', 'htm', 'css']);
 	const JUDGE0_EXTS = new Set([
-		'py', 'java', 'go', 'rs', 'rb',
+		'java', 'go', 'rs', 'rb',
 		'php', 'sh', 'lua', 'cs', 'kt', 'r', 'scala', 'sql', 'swift', 'pl'
 	]);
 
@@ -127,37 +129,34 @@ async function executeViaJudge0(
 	return data;
 }
 
-// ─── Execute via Nodebox ────────────────────────────────────
+// ─── Execute via JS/TS (in-browser) ─────────────────────────
 
-async function executeViaNodebox(
+async function executeViaJS(
 	code: string,
 	filename: string,
-	stdin: string
+	stdin: string = ''
 ): Promise<ExecuteResponse> {
 	const ext = filename.split('.').pop()?.toLowerCase() ?? 'js';
-	const language = ext === 'ts' || ext === 'tsx' ? 'typescript' : 'javascript';
+	const lang: 'js' | 'ts' = (ext === 'ts' || ext === 'tsx') ? 'ts' : 'js';
+	const startTime = performance.now();
 
-	const result = await nodeboxRunner.execute({
-		code,
-		language,
-		stdin,
-		filename
-	});
+	const result = await runJS(code, lang, stdin);
+
+	const elapsed = performance.now() - startTime;
+	const timeStr = elapsed < 1000 ? `${Math.round(elapsed)}ms` : `${(elapsed / 1000).toFixed(3)}s`;
 
 	return {
 		success: result.exitCode === 0,
 		stdout: result.stdout,
 		stderr: result.stderr,
-		compile_output: result.compileOutput ?? '',
+		compile_output: '',
 		status: {
 			id: result.exitCode === 0 ? 3 : 1,
 			description: result.exitCode === 0 ? 'Accepted' : 'Runtime Error'
 		},
-		time: result.executionTime < 1000
-			? `${result.executionTime}ms`
-			: `${(result.executionTime / 1000).toFixed(3)}s`,
-		memory: result.memoryUsage ?? '0 KB',
-		executionMode: 'nodebox'
+		time: timeStr,
+		memory: '0 KB',
+		executionMode: 'nodebox' // keep same label so UI doesn't break
 	};
 }
 
@@ -165,13 +164,19 @@ async function executeViaNodebox(
 
 async function executeViaWasm(
 	code: string,
-	filename: string
+	filename: string,
+	stdin: string = ''
 ): Promise<ExecuteResponse> {
 	const ext = filename.split('.').pop()?.toLowerCase() ?? 'cpp';
-	const lang: 'c' | 'cpp' = (ext === 'c' || ext === 'h') ? 'c' : 'cpp';
 	const startTime = performance.now();
 
-	const result = await runCpp(code, lang);
+	let result: { stdout: string; stderr: string; exitCode: number };
+	if (ext === 'py') {
+		result = await runPython(code, stdin);
+	} else {
+		const lang: 'c' | 'cpp' = (ext === 'c' || ext === 'h') ? 'c' : 'cpp';
+		result = await runCpp(code, lang, stdin);
+	}
 
 	const elapsed = performance.now() - startTime;
 	const timeStr = elapsed < 1000
@@ -250,9 +255,9 @@ export async function executeCode(
 		let result: ExecuteResponse;
 
 		if (mode === 'wasm') {
-			result = await executeViaWasm(code, filename);
+			result = await executeViaWasm(code, filename, stdin);
 		} else if (mode === 'nodebox') {
-			result = await executeViaNodebox(code, filename, stdin);
+			result = await executeViaJS(code, filename, stdin);
 		} else {
 			result = await executeViaJudge0(code, languageId, stdin);
 		}
@@ -309,4 +314,6 @@ export async function executeCode(
 export function cleanupRunners(): void {
 	nodeboxRunner.cleanup?.();
 	cleanupCppRunner();
+	cleanupJsRunner();
+	cleanupPyRunner();
 }

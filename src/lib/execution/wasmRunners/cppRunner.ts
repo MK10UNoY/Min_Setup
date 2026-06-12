@@ -44,11 +44,11 @@ function getWorker(): Worker {
  * Run C or C++ code in-browser via WASM clang/lld.
  * Returns { stdout, stderr, exitCode } matching the existing execution shape.
  */
-export function runCpp(code: string, lang: 'c' | 'cpp' = 'cpp'): Promise<CppRunResult> {
+export function runCpp(code: string, lang: 'c' | 'cpp' = 'cpp', stdin: string = ''): Promise<CppRunResult> {
 	return new Promise((resolve, reject) => {
 		const id = String(++idCounter);
 		pending.set(id, { resolve, reject });
-		getWorker().postMessage({ id, code, lang });
+		getWorker().postMessage({ id, code, lang, stdin });
 	});
 }
 

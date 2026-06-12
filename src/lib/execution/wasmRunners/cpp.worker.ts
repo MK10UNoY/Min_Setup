@@ -537,7 +537,7 @@ class WasmClangAPI {
 		await this.link(obj, wasm);
 
 		const buffer = this.memfs.getFileContents(wasm);
-		const testMod = await WebAssembly.compile(buffer);
+		const testMod = await WebAssembly.compile(buffer.slice().buffer);
 		return await this.runTool(testMod, wasm);
 	}
 }
@@ -571,7 +571,8 @@ function getApi(hostWrite: (s: string) => void): WasmClangAPI {
 // ── Worker message handler ───────────────────────────────────────────────────
 
 self.onmessage = async (e: MessageEvent) => {
-	const { id, code, lang } = e.data as { id: string; code: string; lang: 'c' | 'cpp' };
+	const { id, code, lang, stdin } = e.data as { id: string; code: string; lang: 'c' | 'cpp'; stdin: string };
+
 	let output = '';
 
 	const hostWrite = (s: string) => { output += s; };
@@ -581,7 +582,7 @@ self.onmessage = async (e: MessageEvent) => {
 		// Update hostWrite reference for this run
 		instance.hostWrite = hostWrite;
 		instance.memfs.hostWrite = hostWrite;
-
+		instance.memfs.setStdinStr(stdin ?? '');
 		await instance.compileLinkRun(code, lang);
 
 		const cleaned = stripAnsi(output);
