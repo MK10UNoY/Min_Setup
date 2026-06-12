@@ -25,11 +25,12 @@ function getWorker(): Worker {
 			}
 		};
 		worker.onerror = (e) => {
+			const msg = (e as ErrorEvent).message || 'Failed to load or execute worker script (check console / CORS / CSP / path)';
 			// Reject all pending on fatal worker crash
 			for (const [id, entry] of pending) {
 				entry.resolve({
 					stdout: '',
-					stderr: `Worker crashed: ${e.message}`,
+					stderr: `Worker crashed: ${msg}`,
 					exitCode: 1
 				});
 				pending.delete(id);

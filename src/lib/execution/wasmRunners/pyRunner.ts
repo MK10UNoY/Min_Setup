@@ -20,8 +20,9 @@ function getWorker(): Worker {
 			}
 		};
 		worker.onerror = (e) => {
+			const msg = (e as ErrorEvent).message || 'Failed to load or execute worker script (check console / CORS / CSP / path)';
 			for (const [id, entry] of pending) {
-				entry.resolve({ stdout: '', stderr: `Python Worker crashed: ${e.message}`, exitCode: 1 });
+				entry.resolve({ stdout: '', stderr: `Worker crashed: ${msg}`, exitCode: 1 });
 				pending.delete(id);
 			}
 			worker = null;
