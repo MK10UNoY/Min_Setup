@@ -12,7 +12,7 @@
  * Everything runs in this worker thread — zero UI blocking.
  */
 
-const CDN = 'https://binji.github.io/wasm-clang';
+const CDN = '';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -544,7 +544,10 @@ class WasmClangAPI {
 
 // ── ANSI stripping ───────────────────────────────────────────────────────────
 
-const ANSI_RE = /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><~]/g;
+const ANSI_RE = new RegExp(
+	'[\\u001b\\u009b][[\\]()#;?]*(?:(?:(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><~]))',
+	'g'
+);
 function stripAnsi(s: string): string { return s.replace(ANSI_RE, ''); }
 
 // ── Worker singleton ─────────────────────────────────────────────────────────
@@ -552,12 +555,12 @@ function stripAnsi(s: string): string { return s.replace(ANSI_RE, ''); }
 let api: WasmClangAPI | null = null;
 
 async function compileStreaming(filename: string): Promise<WebAssembly.Module> {
-	const response = await fetch(`${CDN}/${filename}`);
+	const response = await fetch(`/${filename}`);
 	return WebAssembly.compile(await response.arrayBuffer());
 }
 
 async function readBuffer(filename: string): Promise<ArrayBuffer> {
-	const response = await fetch(`${CDN}/${filename}`);
+	const response = await fetch(`/${filename}`);
 	return response.arrayBuffer();
 }
 
