@@ -7,12 +7,18 @@
 	import EditorPanel from '$lib/components/editor/EditorPanel.svelte';
 	import TerminalPanel from '$lib/components/terminal/TerminalPanel.svelte';
 	import PreviewPanel from '$lib/components/preview/PreviewPanel.svelte';
+	import SettingsPanel from '$lib/components/settings/SettingsPanel.svelte';
 	import { uiStore } from '$lib/stores/uiStore';
-	import { onDestroy } from 'svelte';
+	import { settingsStore } from '$lib/stores/settingsStore';
+	import { onDestroy, onMount } from 'svelte';
 	import { cleanupRunners } from '$lib/execution/router';
+
+	// EditorPanel ref for format delegation
+	let editorPanelRef: EditorPanel | undefined = $state();
 
 	// Terminal resize state
 	let isResizing = $state(false);
+	let isResizingSidebar = $state(false);
 	let mainContainer: HTMLDivElement;
 
 	function handleResizeStart(e: MouseEvent) {
@@ -21,7 +27,6 @@
 		const startY = e.clientY;
 		let startHeight: number;
 
-		// Get the current terminal height %
 		uiStore.subscribe((s) => (startHeight = s.terminalHeight))();
 
 		function handleMouseMove(ev: MouseEvent) {
@@ -42,6 +47,38 @@
 		window.addEventListener('mouseup', handleMouseUp);
 	}
 
+	function handleSidebarResizeStart(e: MouseEvent) {
+		e.preventDefault();
+		isResizingSidebar = true;
+		const startX = e.clientX;
+		let startWidth: number;
+
+		uiStore.subscribe((s) => (startWidth = s.sidebarWidth))();
+
+		function handleMouseMove(ev: MouseEvent) {
+			const deltaX = ev.clientX - startX;
+			uiStore.setSidebarWidth(startWidth + deltaX);
+		}
+
+		function handleMouseUp() {
+			isResizingSidebar = false;
+			window.removeEventListener('mousemove', handleMouseMove);
+			window.removeEventListener('mouseup', handleMouseUp);
+		}
+
+		window.addEventListener('mousemove', handleMouseMove);
+		window.addEventListener('mouseup', handleMouseUp);
+	}
+
+	function handleFormat() {
+		editorPanelRef?.formatActiveDocument();
+	}
+
+	// Restore settings from localStorage on initial render
+	onMount(() => {
+		// Loaded automatically by settingsStore.
+	});
+
 	onDestroy(() => {
 		cleanupRunners();
 	});
@@ -52,11 +89,20 @@
 </svelte:head>
 
 <div class="ide-layout">
-	<Topbar />
+	<Topbar onformat={handleFormat} />
 
 	<div class="ide-body">
+		<Sidebar />
+		
 		{#if $uiStore.sidebarOpen}
-			<Sidebar />
+			<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+			<div
+				class="resize-handle-v"
+				class:resizing={isResizingSidebar}
+				role="separator"
+				aria-orientation="vertical"
+				onmousedown={handleSidebarResizeStart}
+			></div>
 		{/if}
 
 		<div class="main-area" bind:this={mainContainer}>
@@ -67,7 +113,7 @@
 			>
 				<div class="editor-and-preview">
 					<div class="editor-main">
-						<EditorPanel />
+						<EditorPanel bind:this={editorPanelRef} />
 					</div>
 					{#if $uiStore.previewOpen}
 						<PreviewPanel />
@@ -77,6 +123,7 @@
 
 			<!-- Resize handle -->
 			{#if $uiStore.terminalOpen}
+				<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 				<div
 					class="resize-handle"
 					class:resizing={isResizing}
@@ -95,6 +142,10 @@
 			{/if}
 		</div>
 	</div>
+
+	{#if $uiStore.settingsOpen}
+		<SettingsPanel />
+	{/if}
 </div>
 
 <style>
@@ -104,7 +155,7 @@
 		height: 100vh;
 		width: 100vw;
 		overflow: hidden;
-		background: #16161e;
+		background: var(--bg-page);
 	}
 
 	.ide-body {
@@ -142,8 +193,8 @@
 	}
 
 	.resize-handle {
-		height: 4px;
-		background: #2d2d2d;
+		height: 6px;
+		background: var(--border-color);
 		cursor: ns-resize;
 		flex-shrink: 0;
 		transition: background 0.15s;
@@ -158,19 +209,53 @@
 		transform: translate(-50%, -50%);
 		width: 32px;
 		height: 2px;
-		background: #4e4e4e;
+		background: var(--bg-paper);
 		border-radius: 1px;
-		opacity: 0;
+		opacity: 0.8;
 		transition: opacity 0.15s;
 	}
 
 	.resize-handle:hover,
 	.resize-handle.resizing {
-		background: #007acc;
+		background: var(--primary);
 	}
 
 	.resize-handle:hover::after,
 	.resize-handle.resizing::after {
+		opacity: 1;
+	}
+
+	.resize-handle-v {
+		width: 6px;
+		background: var(--border-color);
+		cursor: ew-resize;
+		flex-shrink: 0;
+		transition: background 0.15s;
+		position: relative;
+		z-index: 5;
+	}
+
+	.resize-handle-v::after {
+		content: '';
+		position: absolute;
+		left: 50%;
+		top: 50%;
+		transform: translate(-50%, -50%);
+		width: 2px;
+		height: 32px;
+		background: var(--bg-paper);
+		border-radius: 1px;
+		opacity: 0.8;
+		transition: opacity 0.15s;
+	}
+
+	.resize-handle-v:hover,
+	.resize-handle-v.resizing {
+		background: var(--primary);
+	}
+
+	.resize-handle-v:hover::after,
+	.resize-handle-v.resizing::after {
 		opacity: 1;
 	}
 

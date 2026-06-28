@@ -1,11 +1,15 @@
 <script lang="ts">
 	/**
-	 * Sidebar — collapsible left panel with file explorer and actions.
+	 * Sidebar — collapsible left panel with language selector, file explorer, and actions.
 	 */
 	import FileTree from './FileTree.svelte';
 	import { fileStore } from '$lib/stores/fileStore';
 	import { editorStore } from '$lib/stores/editorStore';
 	import { uiStore } from '$lib/stores/uiStore';
+	import { LANGUAGE_GROUPS } from '$lib/utils/fileTypes';
+	import FilePlus from 'phosphor-svelte/lib/FilePlus';
+	import SidebarSimple from 'phosphor-svelte/lib/SidebarSimple';
+	import FunnelSimple from 'phosphor-svelte/lib/FunnelSimple';
 
 	let newFileName = $state('');
 	let showNewFileInput = $state(false);
@@ -37,9 +41,20 @@
 	function toggleSidebar() {
 		uiStore.toggleSidebar();
 	}
+
+	function handleLanguageChange(e: Event) {
+		const target = e.target as HTMLSelectElement;
+		uiStore.setSelectedLanguage(target.value);
+	}
+
+	let hasFilter = $derived($uiStore.selectedLanguage !== '');
 </script>
 
-<aside class="sidebar" class:collapsed={!$uiStore.sidebarOpen}>
+<aside 
+	class="sidebar" 
+	class:collapsed={!$uiStore.sidebarOpen}
+	style="width: {$uiStore.sidebarOpen ? `${$uiStore.sidebarWidth}px` : '0px'}; min-width: {$uiStore.sidebarOpen ? `${$uiStore.sidebarWidth}px` : '0px'};"
+>
 	<div class="sidebar-header">
 		<span class="sidebar-title">EXPLORER</span>
 		<div class="sidebar-actions">
@@ -49,9 +64,7 @@
 				title="New File"
 				aria-label="New File"
 			>
-				<svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-					<path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-				</svg>
+				<FilePlus size={16} />
 			</button>
 			<button
 				class="action-btn"
@@ -59,16 +72,31 @@
 				title="Collapse Sidebar"
 				aria-label="Collapse Sidebar"
 			>
-				<svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-					<path d="M4 2h8a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V4a2 2 0 012-2z" stroke="currentColor" stroke-width="1.2"/>
-					<path d="M6 2v12" stroke="currentColor" stroke-width="1.2"/>
-				</svg>
+				<SidebarSimple size={16} />
 			</button>
 		</div>
 	</div>
 
+	<!-- Language filter -->
+	<div class="language-filter">
+		<span class="filter-icon" class:active={hasFilter}>
+			<FunnelSimple size={13} weight={hasFilter ? 'fill' : 'regular'} />
+		</span>
+		<select
+			class="language-select"
+			value={$uiStore.selectedLanguage}
+			onchange={handleLanguageChange}
+		>
+			<option value="">All Languages</option>
+			{#each LANGUAGE_GROUPS as group (group.key)}
+				<option value={group.key}>{group.label}</option>
+			{/each}
+		</select>
+	</div>
+
 	{#if showNewFileInput}
 		<div class="new-file-input-row">
+			<!-- svelte-ignore a11y_autofocus -->
 			<input
 				class="new-file-input"
 				type="text"
@@ -88,17 +116,14 @@
 	.sidebar {
 		display: flex;
 		flex-direction: column;
-		width: 240px;
-		min-width: 180px;
-		background: #252526;
-		border-right: 1px solid #2d2d2d;
+		background: var(--bg-paper);
+		border-right: 2px solid var(--border-color);
 		overflow: hidden;
-		transition: width 0.2s ease, min-width 0.2s ease;
 	}
 
 	.sidebar.collapsed {
-		width: 0;
-		min-width: 0;
+		width: 0 !important;
+		min-width: 0 !important;
 		border-right: none;
 	}
 
@@ -107,21 +132,22 @@
 		align-items: center;
 		justify-content: space-between;
 		padding: 8px 12px;
-		border-bottom: 1px solid #2d2d2d;
+		border-bottom: 2px solid var(--border-color);
 		min-height: 36px;
 	}
 
 	.sidebar-title {
-		font-size: 11px;
-		font-weight: 600;
+		font-family: var(--font-handwritten);
+		font-size: 15px;
+		font-weight: 700;
 		letter-spacing: 0.8px;
-		color: #bbbbbb;
+		color: var(--text-primary);
 		text-transform: uppercase;
 	}
 
 	.sidebar-actions {
 		display: flex;
-		gap: 2px;
+		gap: 4px;
 	}
 
 	.action-btn {
@@ -130,38 +156,88 @@
 		justify-content: center;
 		width: 24px;
 		height: 24px;
+		border: 1.5px solid transparent;
 		border-radius: 4px;
-		border: none;
 		background: transparent;
-		color: #808080;
+		color: var(--text-secondary);
 		cursor: pointer;
-		transition: background 0.15s, color 0.15s;
+		transition: all 0.15s ease;
 		padding: 0;
 	}
 
 	.action-btn:hover {
-		background: rgba(255, 255, 255, 0.08);
-		color: #cccccc;
+		background: var(--bg-card);
+		border-color: var(--border-color);
+		color: var(--text-primary);
+		transform: rotate(-3deg);
+	}
+
+	.language-filter {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		padding: 6px 12px;
+		border-bottom: 2px solid var(--border-color);
+		background: rgba(0, 0, 0, 0.02);
+	}
+
+	.filter-icon {
+		display: flex;
+		align-items: center;
+		color: var(--text-muted);
+		flex-shrink: 0;
+		transition: color 0.15s;
+	}
+
+	.filter-icon.active {
+		color: var(--primary);
+	}
+
+	.language-select {
+		flex: 1;
+		background: var(--bg-card);
+		border: 2px solid var(--border-color);
+		border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+		color: var(--text-primary);
+		font-family: var(--font-handwritten);
+		font-size: 14px;
+		padding: 2px 6px;
+		outline: none;
+		cursor: pointer;
+		transition: all 0.15s ease;
+	}
+
+	.language-select:hover {
+		transform: scale(1.02);
+	}
+
+	.language-select:focus {
+		border-color: var(--primary);
+	}
+
+	.language-select option {
+		background: var(--bg-card);
+		color: var(--text-primary);
 	}
 
 	.new-file-input-row {
-		padding: 4px 12px;
-		border-bottom: 1px solid #2d2d2d;
+		padding: 6px 12px;
+		border-bottom: 2px solid var(--border-color);
 	}
 
 	.new-file-input {
 		width: 100%;
-		background: #2d2d2d;
-		border: 1px solid #007acc;
-		border-radius: 3px;
-		color: #ffffff;
-		font-size: 13px;
+		background: var(--bg-card);
+		border: 2px solid var(--primary);
+		border-radius: 6px;
+		color: var(--text-primary);
+		font-family: var(--font-handwritten);
+		font-size: 14px;
 		padding: 3px 8px;
 		outline: none;
-		font-family: inherit;
 	}
 
 	.new-file-input::placeholder {
-		color: #5e5e5e;
+		color: var(--text-muted);
 	}
 </style>

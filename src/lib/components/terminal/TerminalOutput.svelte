@@ -49,11 +49,11 @@
 		flex: 1;
 		overflow-y: auto;
 		overflow-x: auto;
-		padding: 8px 12px;
-		font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', Consolas, monospace;
-		font-size: 12.5px;
+		padding: 10px 16px;
+		font-family: var(--font-mono);
+		font-size: var(--terminal-font-size);
 		line-height: 1.5;
-		background: #1a1a2e;
+		background: var(--bg-card);
 	}
 
 	.terminal-output::-webkit-scrollbar {
@@ -66,8 +66,12 @@
 	}
 
 	.terminal-output::-webkit-scrollbar-thumb {
-		background: rgba(255, 255, 255, 0.1);
+		background: rgba(45, 45, 45, 0.2);
 		border-radius: 3px;
+	}
+
+	:global(html[data-theme="dark"]) .terminal-output::-webkit-scrollbar-thumb {
+		background: rgba(244, 244, 245, 0.2);
 	}
 
 	.terminal-line {
@@ -83,36 +87,40 @@
 	}
 
 	.line-stdout pre {
-		color: #d4d4d4;
+		color: var(--text-primary);
 	}
 
 	.line-stderr pre {
-		color: #f44747;
+		color: var(--danger);
+		font-weight: 500;
 	}
 
 	.line-system pre {
-		color: #569cd6;
+		color: var(--primary);
 		font-style: italic;
 	}
 
 	.line-stdin pre {
-		color: #dcdcaa;
+		color: var(--secondary);
 	}
 
 	.terminal-empty {
 		display: flex;
 		align-items: center;
 		gap: 8px;
-		color: #5e5e5e;
+		color: var(--text-muted);
 		padding: 4px 0;
 	}
 
 	.terminal-prompt {
-		color: #4ec9b0;
-		font-weight: 600;
+		color: var(--success);
+		font-weight: 700;
+		font-size: 14px;
 	}
 
 	.terminal-hint {
-		color: #5e5e5e;
+		color: var(--text-muted);
+		font-family: var(--font-handwritten);
+		font-size: 16px;
 	}
 </style>

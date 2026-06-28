@@ -1,10 +1,15 @@
 <script lang="ts">
 	/**
-	 * EditorTabs — horizontal tab bar for open files.
+	 * EditorTabs — horizontal scrollable tab bar for open files.
 	 * Shows file name, dirty indicator, close button.
+	 * Supports horizontal scroll via mouse wheel when tabs overflow.
 	 */
 	import { editorStore } from '$lib/stores/editorStore';
-	import { getFileIcon } from '$lib/utils/fileTypes';
+	import { getFileColor } from '$lib/utils/fileTypes';
+	import X from 'phosphor-svelte/lib/X';
+	import Circle from 'phosphor-svelte/lib/Circle';
+
+	let tabsContainer: HTMLDivElement;
 
 	function handleTabClick(path: string) {
 		editorStore.setActive(path);
@@ -21,9 +26,23 @@
 			editorStore.closeTab(path);
 		}
 	}
+
+	/** Horizontal scroll via mouse wheel when tabs overflow */
+	function handleWheel(e: WheelEvent) {
+		if (!tabsContainer) return;
+		if (tabsContainer.scrollWidth > tabsContainer.clientWidth) {
+			e.preventDefault();
+			tabsContainer.scrollLeft += e.deltaY;
+		}
+	}
 </script>
 
-<div class="editor-tabs" role="tablist">
+<div
+	class="editor-tabs"
+	role="tablist"
+	bind:this={tabsContainer}
+	onwheel={handleWheel}
+>
 	{#each $editorStore.openTabs as tab (tab.path)}
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<div
@@ -37,10 +56,14 @@
 			onkeydown={(e) => e.key === 'Enter' && handleTabClick(tab.path)}
 			title={tab.path}
 		>
-			<span class="tab-icon">{getFileIcon(tab.name)}</span>
+			<span class="tab-dot" style="color: {getFileColor(tab.name)}">
+				<Circle size={8} weight="fill" />
+			</span>
 			<span class="tab-name">{tab.name}</span>
 			{#if tab.isDirty}
-				<span class="dirty-dot" title="Unsaved changes"></span>
+				<span class="dirty-dot" title="Unsaved changes">
+					<Circle size={8} weight="fill" />
+				</span>
 			{/if}
 			<button
 				class="tab-close"
@@ -48,7 +71,7 @@
 				title="Close"
 				aria-label="Close {tab.name}"
 			>
-				×
+				<X size={12} />
 			</button>
 		</div>
 	{/each}
@@ -57,47 +80,77 @@
 <style>
 	.editor-tabs {
 		display: flex;
-		background: #1e1e1e;
-		border-bottom: 1px solid #2d2d2d;
+		background: var(--bg-paper);
+		border-bottom: 2px solid var(--border-color);
 		overflow-x: auto;
-		scrollbar-width: none;
-		min-height: 36px;
+		overflow-y: hidden;
+		scrollbar-width: thin;
+		scrollbar-color: rgba(45,45,45,0.2) transparent;
+		min-height: 40px;
+		scroll-behavior: smooth;
+		padding-top: 4px;
+		padding-left: 8px;
+		position: relative;
+		z-index: 5;
 	}
 
 	.editor-tabs::-webkit-scrollbar {
-		display: none;
+		height: 4px;
+	}
+
+	.editor-tabs::-webkit-scrollbar-track {
+		background: transparent;
+	}
+
+	.editor-tabs::-webkit-scrollbar-thumb {
+		background: rgba(45, 45, 45, 0.2);
+		border-radius: 4px;
+	}
+
+	.editor-tabs::-webkit-scrollbar-thumb:hover {
+		background: rgba(45, 45, 45, 0.4);
 	}
 
 	.tab {
 		display: flex;
 		align-items: center;
 		gap: 6px;
-		padding: 6px 12px;
-		background: #2d2d2d;
-		border: none;
-		border-right: 1px solid #1e1e1e;
-		color: #969696;
-		font-size: 12.5px;
+		padding: 4px 14px;
+		background: var(--bg-paper);
+		border: 2px solid var(--border-color);
+		border-bottom: none;
+		border-radius: 12px 12px 0 0;
+		color: var(--text-secondary);
+		font-family: var(--font-handwritten);
+		font-size: 15px;
+		font-weight: 500;
 		cursor: pointer;
 		white-space: nowrap;
-		transition: background-color 0.15s, color 0.15s;
-		font-family: inherit;
+		transition: all 0.15s ease;
 		min-width: 0;
+		flex-shrink: 0;
+		margin-right: 4px;
+		position: relative;
+		bottom: -2px; /* Pull tab down to overlap the container border */
 	}
 
 	.tab:hover {
-		background: #353535;
-		color: #cccccc;
+		background: var(--bg-card);
+		color: var(--text-primary);
 	}
 
 	.tab.active {
-		background: #1e1e1e;
-		color: #ffffff;
-		border-bottom: 2px solid #007acc;
+		background: var(--bg-card);
+		color: var(--text-primary);
+		font-weight: bold;
+		border-bottom: 2px solid var(--bg-card); /* Hide the container border line */
+		z-index: 10;
+		transform: translateY(-2px); /* Slight lift effect */
 	}
 
-	.tab-icon {
-		font-size: 13px;
+	.tab-dot {
+		display: flex;
+		align-items: center;
 		flex-shrink: 0;
 	}
 
@@ -107,10 +160,9 @@
 	}
 
 	.dirty-dot {
-		width: 8px;
-		height: 8px;
-		border-radius: 50%;
-		background: #c6c6c6;
+		display: flex;
+		align-items: center;
+		color: var(--danger);
 		flex-shrink: 0;
 	}
 
@@ -121,16 +173,15 @@
 		width: 18px;
 		height: 18px;
 		border-radius: 4px;
-		border: none;
+		border: 1px solid transparent;
 		background: transparent;
-		color: #969696;
-		font-size: 15px;
+		color: var(--text-secondary);
 		cursor: pointer;
 		flex-shrink: 0;
 		padding: 0;
 		line-height: 1;
 		opacity: 0;
-		transition: opacity 0.1s, background 0.1s;
+		transition: all 0.15s ease;
 	}
 
 	.tab:hover .tab-close {
@@ -138,7 +189,9 @@
 	}
 
 	.tab-close:hover {
-		background: rgba(255, 255, 255, 0.1);
-		color: #ffffff;
+		background: var(--bg-paper);
+		border-color: var(--border-color);
+		color: var(--danger);
+		transform: scale(1.1) rotate(9deg);
 	}
 </style>

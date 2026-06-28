@@ -1,16 +1,28 @@
 <script lang="ts">
 	/**
-	 * FileTree — file explorer tree listing all project files.
+	 * FileTree — file explorer tree listing project files.
+	 * Filters files based on the selected language group from uiStore.
 	 */
 	import { fileStore } from '$lib/stores/fileStore';
+	import { uiStore } from '$lib/stores/uiStore';
+	import { getLanguageGroup } from '$lib/utils/fileTypes';
 	import FileTreeItem from './FileTreeItem.svelte';
 
 	let sortedFiles = $derived(
-		Object.values($fileStore.files).sort((a, b) => {
-			// Directories first, then alphabetical
-			if (a.isDirectory !== b.isDirectory) return a.isDirectory ? -1 : 1;
-			return a.name.localeCompare(b.name);
-		})
+		Object.values($fileStore.files)
+			.filter((f) => {
+				// If no language filter is active, show everything
+				if (!$uiStore.selectedLanguage) return true;
+				// Directories always show
+				if (f.isDirectory) return true;
+				// Match against language group
+				return getLanguageGroup(f.name) === $uiStore.selectedLanguage;
+			})
+			.sort((a, b) => {
+				// Directories first, then alphabetical
+				if (a.isDirectory !== b.isDirectory) return a.isDirectory ? -1 : 1;
+				return a.name.localeCompare(b.name);
+			})
 	);
 </script>
 
@@ -21,7 +33,7 @@
 
 	{#if sortedFiles.length === 0}
 		<div class="empty-tree">
-			<span>No files yet</span>
+			<span>No matching files</span>
 		</div>
 	{/if}
 </div>

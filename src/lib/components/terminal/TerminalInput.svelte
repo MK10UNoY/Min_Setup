@@ -31,14 +31,15 @@
 		align-items: flex-start;
 		gap: 8px;
 		padding: 6px 12px;
-		border-top: 1px solid #2d2d2d;
-		background: #1a1a2e;
+		border-top: 2px solid var(--border-color);
+		background: var(--bg-paper);
 	}
 
 	.stdin-label {
-		font-size: 11px;
-		font-weight: 600;
-		color: #4ec9b0;
+		font-family: var(--font-handwritten);
+		font-size: 15px;
+		font-weight: 700;
+		color: var(--success);
 		text-transform: uppercase;
 		letter-spacing: 0.5px;
 		padding-top: 6px;
@@ -47,25 +48,26 @@
 
 	.stdin-textarea {
 		flex: 1;
-		background: #0d1117;
-		border: 1px solid #2d2d2d;
-		border-radius: 4px;
-		color: #d4d4d4;
-		font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
-		font-size: 12px;
+		background: var(--bg-card);
+		border: 2px solid var(--border-color);
+		border-radius: 8px;
+		color: var(--text-primary);
+		font-family: var(--font-mono);
+		font-size: 13px;
 		padding: 6px 10px;
 		resize: vertical;
 		min-height: 32px;
 		max-height: 120px;
 		outline: none;
-		transition: border-color 0.15s;
+		transition: all 0.15s ease;
 	}
 
 	.stdin-textarea:focus {
-		border-color: #007acc;
+		border-color: var(--primary);
+		transform: scale(1.005);
 	}
 
 	.stdin-textarea::placeholder {
-		color: #4e4e4e;
+		color: var(--text-muted);
 	}
 </style>

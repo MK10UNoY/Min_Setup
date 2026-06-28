@@ -1,13 +1,17 @@
 <script lang="ts">
 	/**
 	 * PreviewPanel — right-side iframe for live HTML/CSS/JS preview.
+	 * Uses phosphor-svelte icons.
 	 */
 	import { editorStore } from '$lib/stores/editorStore';
 	import { fileStore } from '$lib/stores/fileStore';
 	import { uiStore } from '$lib/stores/uiStore';
+	import ArrowClockwise from 'phosphor-svelte/lib/ArrowClockwise';
+	import X from 'phosphor-svelte/lib/X';
+	import Globe from 'phosphor-svelte/lib/Globe';
 
 	let iframeSrc = $state('');
-	let iframeEl: HTMLIFrameElement;
+	let iframeEl: HTMLIFrameElement | undefined = $state();
 
 	let activeFile = $derived(
 		$editorStore.activeFilePath
@@ -50,18 +54,13 @@
 
 <div class="preview-panel">
 	<div class="preview-header">
-		<span class="preview-title">Preview</span>
+		<span class="preview-title">PREVIEW</span>
 		<div class="preview-actions">
-			<button class="preview-btn" onclick={handleRefresh} title="Refresh">
-				<svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-					<path d="M13.65 2.35A8 8 0 1015 8h-2a6 6 0 11-1.76-4.24" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-					<path d="M14 2v4h-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-				</svg>
+			<button class="preview-btn" onclick={handleRefresh} title="Refresh" aria-label="Refresh Preview">
+				<ArrowClockwise size={14} />
 			</button>
-			<button class="preview-btn" onclick={handleClose} title="Close Preview">
-				<svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-					<path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-				</svg>
+			<button class="preview-btn" onclick={handleClose} title="Close Preview" aria-label="Close Preview">
+				<X size={14} />
 			</button>
 		</div>
 	</div>
@@ -77,7 +76,9 @@
 			></iframe>
 		{:else}
 			<div class="preview-empty">
-				<span class="preview-empty-icon">🌐</span>
+				<span class="preview-empty-icon">
+					<Globe size={32} />
+				</span>
 				<p>Open an HTML file to see a live preview</p>
 			</div>
 		{/if}
@@ -90,8 +91,8 @@
 		flex-direction: column;
 		width: 400px;
 		min-width: 250px;
-		background: #1e1e1e;
-		border-left: 1px solid #2d2d2d;
+		background: var(--bg-paper);
+		border-left: 2px solid var(--border-color);
 	}
 
 	.preview-header {
@@ -99,22 +100,22 @@
 		align-items: center;
 		justify-content: space-between;
 		padding: 6px 12px;
-		background: #252526;
-		border-bottom: 1px solid #2d2d2d;
-		min-height: 34px;
+		background: var(--bg-paper);
+		border-bottom: 2px solid var(--border-color);
+		min-height: 38px;
 	}
 
 	.preview-title {
-		font-size: 11px;
-		font-weight: 600;
-		color: #bbbbbb;
-		text-transform: uppercase;
+		font-family: var(--font-handwritten);
+		font-size: 15px;
+		font-weight: 700;
+		color: var(--text-primary);
 		letter-spacing: 0.5px;
 	}
 
 	.preview-actions {
 		display: flex;
-		gap: 2px;
+		gap: 4px;
 	}
 
 	.preview-btn {
@@ -123,30 +124,36 @@
 		justify-content: center;
 		width: 24px;
 		height: 24px;
+		border: 1.5px solid transparent;
 		border-radius: 4px;
-		border: none;
 		background: transparent;
-		color: #808080;
+		color: var(--text-secondary);
 		cursor: pointer;
-		transition: background 0.15s, color 0.15s;
+		transition: all 0.15s ease;
 		padding: 0;
 	}
 
 	.preview-btn:hover {
-		background: rgba(255, 255, 255, 0.08);
-		color: #cccccc;
+		background: var(--bg-card);
+		border-color: var(--border-color);
+		color: var(--text-primary);
+		transform: rotate(3deg);
 	}
 
 	.preview-content {
 		flex: 1;
 		min-height: 0;
+		padding: 8px;
+		background-color: var(--bg-page);
 	}
 
 	.preview-iframe {
 		width: 100%;
 		height: 100%;
-		border: none;
+		border: 2px solid var(--border-color);
+		border-radius: 8px;
 		background: #ffffff;
+		box-shadow: 2px 2px 0 var(--border-color);
 	}
 
 	.preview-empty {
@@ -155,19 +162,21 @@
 		align-items: center;
 		justify-content: center;
 		height: 100%;
-		color: #5e5e5e;
+		color: var(--text-secondary);
 		text-align: center;
 		padding: 2rem;
+		font-family: var(--font-handwritten);
 	}
 
 	.preview-empty-icon {
-		font-size: 32px;
+		display: flex;
+		align-items: center;
 		margin-bottom: 12px;
-		opacity: 0.5;
+		opacity: 0.7;
 	}
 
 	.preview-empty p {
-		font-size: 12px;
+		font-size: 16px;
 		max-width: 200px;
 	}
 </style>

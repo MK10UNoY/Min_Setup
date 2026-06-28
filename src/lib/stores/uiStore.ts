@@ -1,5 +1,5 @@
 /**
- * UI state store — manages panel visibility and layout state.
+ * UI state store — manages panel visibility, layout state, and language filter.
  */
 import { writable } from 'svelte/store';
 
@@ -7,8 +7,10 @@ export interface UIStoreState {
 	sidebarOpen: boolean;
 	terminalOpen: boolean;
 	previewOpen: boolean;
+	settingsOpen: boolean;
 	terminalHeight: number; // percentage of viewport
 	sidebarWidth: number; // pixels
+	selectedLanguage: string; // '' = show all, otherwise filter key like 'javascript', 'python', etc.
 }
 
 function createUIStore() {
@@ -16,8 +18,10 @@ function createUIStore() {
 		sidebarOpen: true,
 		terminalOpen: true,
 		previewOpen: false,
+		settingsOpen: false,
 		terminalHeight: 30,
-		sidebarWidth: 240
+		sidebarWidth: 240,
+		selectedLanguage: ''
 	});
 
 	return {
@@ -44,6 +48,20 @@ function createUIStore() {
 			});
 		},
 
+		toggleSettings() {
+			update((state) => {
+				state.settingsOpen = !state.settingsOpen;
+				return state;
+			});
+		},
+
+		setSettingsOpen(open: boolean) {
+			update((state) => {
+				state.settingsOpen = open;
+				return state;
+			});
+		},
+
 		setSidebarOpen(open: boolean) {
 			update((state) => {
 				state.sidebarOpen = open;
@@ -65,13 +83,22 @@ function createUIStore() {
 			});
 		},
 
+		setSelectedLanguage(language: string) {
+			update((state) => {
+				state.selectedLanguage = language;
+				return state;
+			});
+		},
+
 		reset() {
 			set({
 				sidebarOpen: true,
 				terminalOpen: true,
 				previewOpen: false,
+				settingsOpen: false,
 				terminalHeight: 30,
-				sidebarWidth: 240
+				sidebarWidth: 240,
+				selectedLanguage: ''
 			});
 		}
 	};

@@ -8,21 +8,25 @@
   }
 </script>
 
-<div class="min-h-screen flex flex-col items-center justify-center bg-gray-50">
-  <form class="bg-white p-8 rounded shadow-md w-full max-w-sm" on:submit|preventDefault={register}>
-    <h2 class="text-2xl font-bold mb-6 text-center">Register</h2>
+<div class="min-h-screen flex flex-col items-center justify-center p-4">
+  <form class="p-8 w-full max-w-sm bg-[var(--bg-card)] border-2 border-[var(--border-color)] shadow-[4px_4px_0_var(--border-color)]" style="border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;" on:submit|preventDefault={register}>
+    <h2 class="text-3xl font-bold mb-6 text-center text-[var(--text-primary)]" style="font-family: var(--font-handwritten);">Register</h2>
+    
     <div class="mb-4">
-      <label class="block mb-1">Email</label>
-      <input class="border rounded w-full p-2" type="email" bind:value={email} required />
+      <label class="block mb-1 text-lg text-[var(--text-primary)]" style="font-family: var(--font-handwritten);" for="email">Email</label>
+      <input class="w-full p-2 border-2 border-[var(--border-color)] rounded-lg bg-[var(--bg-card)] text-[var(--text-primary)] outline-none focus:scale-[1.01] transition-transform" style="font-family: var(--font-handwritten);" type="email" id="email" bind:value={email} required />
     </div>
+    
     <div class="mb-4">
-      <label class="block mb-1">Password</label>
-      <input class="border rounded w-full p-2" type="password" bind:value={password} required />
+      <label class="block mb-1 text-lg text-[var(--text-primary)]" style="font-family: var(--font-handwritten);" for="password">Password</label>
+      <input class="w-full p-2 border-2 border-[var(--border-color)] rounded-lg bg-[var(--bg-card)] text-[var(--text-primary)] outline-none focus:scale-[1.01] transition-transform" style="font-family: var(--font-handwritten);" type="password" id="password" bind:value={password} required />
     </div>
+    
     <div class="mb-6">
-      <label class="block mb-1">Confirm Password</label>
-      <input class="border rounded w-full p-2" type="password" bind:value={confirmPassword} required />
+      <label class="block mb-1 text-lg text-[var(--text-primary)]" style="font-family: var(--font-handwritten);" for="confirmPassword">Confirm Password</label>
+      <input class="w-full p-2 border-2 border-[var(--border-color)] rounded-lg bg-[var(--bg-card)] text-[var(--text-primary)] outline-none focus:scale-[1.01] transition-transform" style="font-family: var(--font-handwritten);" type="password" id="confirmPassword" bind:value={confirmPassword} required />
     </div>
-    <button class="bg-blue-600 text-white px-4 py-2 rounded w-full">Register</button>
+    
+    <button class="w-full py-2 border-2 border-[var(--border-color)] text-[var(--text-primary)] font-bold text-lg cursor-pointer transition-all active:translate-y-[2px] active:shadow-[1px_1px_0_var(--border-color)] bg-[var(--primary)] shadow-[3px_3px_0_var(--border-color)]" style="font-family: var(--font-handwritten); border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;">Register</button>
   </form>
 </div> 

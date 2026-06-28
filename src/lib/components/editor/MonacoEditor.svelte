@@ -2,9 +2,11 @@
 	/**
 	 * MonacoEditor — wrapper around the Monaco editor instance.
 	 * Handles creation, language switching, value sync, and cleanup.
+	 * Exposes formatDocument() for external auto-format triggering.
 	 */
 	import { onMount, onDestroy } from 'svelte';
 	import { getMonacoLanguage } from '$lib/utils/fileTypes';
+	import { settingsStore } from '$lib/stores/settingsStore';
 
 	interface Props {
 		value: string;
@@ -13,12 +15,19 @@
 		onchange?: (value: string) => void;
 	}
 
-	let { value, filename, theme = 'vs-dark', onchange }: Props = $props();
+	let { value, filename, onchange }: Props = $props();
 
 	let editorContainer: HTMLDivElement;
 	let editor: ReturnType<typeof import('monaco-editor').editor.create> | null = null;
 	let monaco: typeof import('monaco-editor') | null = null;
 	let isUpdatingFromProp = false;
+
+	let activeTheme = $derived($settingsStore.theme);
+	let isDark = $derived(
+		activeTheme === 'dark' || 
+		(activeTheme === 'system' && typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+	);
+	let monacoTheme = $derived(isDark ? 'vs-dark' : 'vs');
 
 	onMount(async () => {
 		const monacoModule = await import('$lib/monaco-setup');
@@ -31,30 +40,47 @@
 		editor = monaco.editor.create(editorContainer, {
 			value,
 			language: monacoLanguage,
-			theme,
-			fontSize: 14,
+			theme: monacoTheme,
+			fontSize: $settingsStore.editorFontSize,
 			fontFamily: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', Consolas, monospace",
 			fontLigatures: true,
-			minimap: { enabled: true, scale: 1 },
-			lineNumbers: 'on',
+			minimap: { enabled: $settingsStore.editorMinimap, scale: 1 },
+			lineNumbers: $settingsStore.editorLineNumbers,
 			renderLineHighlight: 'all',
 			scrollBeyondLastLine: false,
-			wordWrap: 'on',
-			tabSize: 2,
+			wordWrap: $settingsStore.editorWordWrap,
+			tabSize: $settingsStore.editorTabSize,
 			insertSpaces: true,
 			automaticLayout: true,
 			bracketPairColorization: { enabled: true },
 			padding: { top: 12, bottom: 12 },
 			smoothScrolling: true,
-			cursorBlinking: 'smooth',
+			cursorBlinking: $settingsStore.terminalCursorBlink ? 'blink' : 'solid',
 			cursorSmoothCaretAnimation: 'on',
-			roundedSelection: true
+			roundedSelection: true,
+			cursorStyle: $settingsStore.editorCursorStyle
 		});
 
 		editor.onDidChangeModelContent(() => {
 			if (isUpdatingFromProp || !editor) return;
 			onchange?.(editor.getValue());
 		});
+	});
+
+	// Update Monaco options dynamically when settings change
+	$effect(() => {
+		if (editor && monaco) {
+			editor.updateOptions({
+				fontSize: $settingsStore.editorFontSize,
+				lineNumbers: $settingsStore.editorLineNumbers,
+				wordWrap: $settingsStore.editorWordWrap,
+				minimap: { enabled: $settingsStore.editorMinimap },
+				tabSize: $settingsStore.editorTabSize,
+				cursorStyle: $settingsStore.editorCursorStyle,
+				cursorBlinking: $settingsStore.terminalCursorBlink ? 'blink' : 'solid'
+			});
+			monaco.editor.setTheme(monacoTheme);
+		}
 	});
 
 	// Update language when filename changes
@@ -81,6 +107,12 @@
 		editor?.dispose();
 		editor = null;
 	});
+
+	/** Trigger Monaco's built-in auto-format action on the active document */
+	export function formatDocument(): void {
+		if (!editor) return;
+		editor.getAction('editor.action.formatDocument')?.run();
+	}
 </script>
 
 <div bind:this={editorContainer} class="monaco-editor-container"></div>
@@ -90,5 +122,9 @@
 		width: 100%;
 		height: 100%;
 		min-height: 200px;
+		border-left: 2px solid var(--border-color);
+		border-right: 2px solid var(--border-color);
+		border-bottom: 2px solid var(--border-color);
+		background-color: var(--bg-card);
 	}
 </style>

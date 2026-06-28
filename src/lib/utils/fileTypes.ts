@@ -82,3 +82,27 @@ export function getExecutionBackend(filename: string): ExecutionBackend {
 	if (['.html', '.htm'].includes(ext)) return 'preview';
 	return 'none';
 }
+
+/**
+ * Language groups for the sidebar filter dropdown.
+ * Each group has a label and a set of file extensions that belong to it.
+ */
+export const LANGUAGE_GROUPS: { key: string; label: string; extensions: string[] }[] = [
+	{ key: 'javascript', label: 'JavaScript', extensions: ['.js', '.mjs', '.cjs', '.jsx'] },
+	{ key: 'typescript', label: 'TypeScript', extensions: ['.ts', '.tsx'] },
+	{ key: 'python', label: 'Python', extensions: ['.py'] },
+	{ key: 'c', label: 'C', extensions: ['.c', '.h'] },
+	{ key: 'cpp', label: 'C++', extensions: ['.cpp', '.cc', '.hpp'] },
+	{ key: 'java', label: 'Java', extensions: ['.java'] },
+	{ key: 'web', label: 'HTML / CSS', extensions: ['.html', '.htm', '.css', '.scss'] },
+	{ key: 'other', label: 'Other', extensions: ['.json', '.md', '.xml', '.yaml', '.yml', '.sh', '.sql', '.txt'] }
+];
+
+/** Get the language group key for a filename */
+export function getLanguageGroup(filename: string): string {
+	const ext = getFileExtension(filename);
+	for (const group of LANGUAGE_GROUPS) {
+		if (group.extensions.includes(ext)) return group.key;
+	}
+	return 'other';
+}

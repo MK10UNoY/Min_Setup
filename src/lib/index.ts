@@ -9,4 +9,4 @@ export { terminalStore } from './stores/terminalStore';
 export { uiStore } from './stores/uiStore';
 export { executeCode, cleanupRunners, getExecutionMode } from './execution/router';
 export { stripAnsi, cleanOutput } from './utils/ansiStripper';
-export { getFileType, getMonacoLanguage, getExecutionBackend } from './utils/fileTypes';
+export { getFileType, getMonacoLanguage, getExecutionBackend, getLanguageGroup, LANGUAGE_GROUPS } from './utils/fileTypes';

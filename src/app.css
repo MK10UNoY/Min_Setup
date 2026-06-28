@@ -1,33 +1,91 @@
-/* Import JetBrains Mono + Inter for code / terminal */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+/* Import JetBrains Mono + Nunito + Patrick Hand + Caveat for the hand-drawn look */
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Kalam:wght@400;700&family=Nunito:wght@300;400;600;700;800&family=Patrick+Hand&display=swap');
 
 @import 'tailwindcss';
 @plugin '@tailwindcss/forms';
 @plugin '@tailwindcss/typography';
 
-/* ===== Low Setup Guru — Global Styles ===== */
+/* ===== Low Setup Guru — Hand-Drawn Sketchbook Styles ===== */
 
 :root {
-	/* Core palette */
-	--bg-primary: #16161e;
-	--bg-secondary: #1e1e2e;
-	--bg-tertiary: #252526;
-	--bg-elevated: #2d2d2d;
-	--border-color: #2d2d2d;
+	/* Light Mode Palette */
+	--bg-page: #F9F7F1;
+	--bg-paper: #F4F0E6;
+	--bg-card: #FFFDF8;
+	
+	/* Palette (Pastels / Fallbacks) */
+	--primary-hsl: 218 90% 64%;
+	--secondary-hsl: 32 92% 68%;
+	--success-hsl: 97 50% 55%;
+	--danger-hsl: 13 81% 61%;
+	--accent-hsl: 266 85% 74%;
 
-	--text-primary: #e0e0e0;
-	--text-secondary: #a0a0a0;
-	--text-muted: #5e5e5e;
+	--primary: hsl(var(--primary-hsl));
+	--secondary: hsl(var(--secondary-hsl));
+	--success: hsl(var(--success-hsl));
+	--danger: hsl(var(--danger-hsl));
+	--accent: hsl(var(--accent-hsl));
+	
+	/* Outlines & Text */
+	--border-color: #2D2D2D;
+	--text-primary: #2D2D2D;
+	--text-secondary: #5E5E5E;
+	--text-muted: #8E8E8E;
 
-	--accent-blue: #007acc;
-	--accent-green: #10b981;
-	--accent-red: #f44747;
-	--accent-yellow: #dcdcaa;
-	--accent-teal: #4ec9b0;
+	/* Fonts */
+	--font-handwritten: 'Patrick Hand', 'Kalam', 'Caveat', cursive;
+	--font-sans: 'Nunito', 'Inter', -apple-system, sans-serif;
+	--font-mono: 'JetBrains Mono', Consolas, monospace;
 
 	/* Sizing */
-	--topbar-height: 44px;
+	--topbar-height: 48px;
 	--sidebar-width: 240px;
+	--border-radius: 6px;
+	--ui-scale: 1;
+	--terminal-font-size: 13px;
+}
+
+/* Dark Mode Theme Overrides */
+html[data-theme="dark"] {
+	--bg-page: #18181B;
+	--bg-paper: #1D1F25;
+	--bg-card: #202127;
+
+	--border-color: #343740;
+	--text-primary: #F4F4F5;
+	--text-secondary: #A1A1AA;
+	--text-muted: #71717A;
+}
+
+/* High Contrast Mode Overrides */
+html[data-contrast="high"] {
+	--border-color: #000000;
+	--text-primary: #000000;
+	--text-secondary: #1E1E1E;
+	--text-muted: #4E4E4E;
+}
+
+html[data-contrast="high"][data-theme="dark"] {
+	--border-color: #FFFFFF;
+	--text-primary: #FFFFFF;
+	--text-secondary: #E4E4E7;
+	--text-muted: #A1A1AA;
+}
+
+/* Compact vs Comfortable Density */
+html[data-sidebar-density="compact"] {
+	--sidebar-item-padding: 2px 8px;
+}
+html[data-sidebar-density="comfortable"] {
+	--sidebar-item-padding: 6px 12px;
+}
+
+/* Reduced Motion Mode */
+html[data-motion="reduced"] * {
+	animation-duration: 0.001ms !important;
+	animation-iteration-count: 1 !important;
+	transition-duration: 0.001ms !important;
+	scroll-behavior: auto !important;
 }
 
 *,
@@ -41,14 +99,31 @@ html, body {
 	padding: 0;
 	height: 100%;
 	overflow: hidden;
-	font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-	background: var(--bg-primary);
+	font-family: var(--font-sans);
+	background-color: var(--bg-page);
+	transform: scale(var(--ui-scale));
+	transform-origin: top left;
+	width: calc(100% / var(--ui-scale));
+	height: calc(100% / var(--ui-scale));
+	
+	/* Subtle graph paper background pattern */
+	background-image: 
+		linear-gradient(rgba(45, 45, 45, 0.03) 1px, transparent 1px),
+		linear-gradient(90deg, rgba(45, 45, 45, 0.03) 1px, transparent 1px);
+	background-size: 20px 20px;
 	color: var(--text-primary);
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
+	transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease;
 }
 
-/* Scrollbar styling */
+html[data-theme="dark"] body {
+	background-image: 
+		linear-gradient(rgba(244, 244, 245, 0.02) 1px, transparent 1px),
+		linear-gradient(90deg, rgba(244, 244, 245, 0.02) 1px, transparent 1px);
+}
+
+/* Scrollbar styling (classic sketchbook scrollbar) */
 ::-webkit-scrollbar {
 	width: 8px;
 	height: 8px;
@@ -59,27 +134,97 @@ html, body {
 }
 
 ::-webkit-scrollbar-thumb {
-	background: rgba(255, 255, 255, 0.08);
-	border-radius: 4px;
+	background: rgba(45, 45, 45, 0.2);
+	border: 2px solid var(--bg-page);
+	border-radius: 8px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-	background: rgba(255, 255, 255, 0.15);
+	background: rgba(45, 45, 45, 0.4);
+}
+
+html[data-theme="dark"] ::-webkit-scrollbar-thumb {
+	background: rgba(244, 244, 245, 0.2);
+}
+
+html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+	background: rgba(244, 244, 245, 0.4);
 }
 
 /* Focus styles */
 :focus-visible {
-	outline: 1px solid var(--accent-blue);
-	outline-offset: -1px;
+	outline: 2px solid var(--primary);
+	outline-offset: 2px;
 }
 
 /* Selection */
 ::selection {
-	background: rgba(0, 122, 204, 0.3);
-	color: #ffffff;
+	background: rgba(79, 142, 247, 0.25);
+	color: var(--text-primary);
 }
 
-/* Utility: monospace */
-.font-mono {
-	font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', Consolas, monospace;
+/* Utility classes for Hand-Drawn look */
+.sketch-border {
+	border: 2px solid var(--border-color);
+	border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+}
+
+.sketch-shadow {
+	box-shadow: 4px 4px 0 var(--border-color);
+}
+
+.sketch-button {
+	font-family: var(--font-handwritten);
+	font-size: 16px;
+	font-weight: 500;
+	border: 2px solid var(--border-color);
+	border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+	box-shadow: 3px 3px 0 var(--border-color);
+	background-color: var(--bg-card);
+	color: var(--text-primary);
+	cursor: pointer;
+	transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	padding: 6px 12px;
+}
+
+.sketch-button:hover:not(:disabled) {
+	transform: translate(-1px, -1px) rotate(-1deg);
+	box-shadow: 4px 4px 0 var(--border-color);
+}
+
+.sketch-button:active:not(:disabled) {
+	transform: translate(1px, 1px);
+	box-shadow: 1px 1px 0 var(--border-color);
+}
+
+.sketch-button:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+	box-shadow: none;
+}
+
+.sketch-input {
+	font-family: var(--font-handwritten);
+	font-size: 16px;
+	border: 2px solid var(--border-color);
+	border-radius: 12px;
+	padding: 6px 10px;
+	background-color: var(--bg-card);
+	color: var(--text-primary);
+	outline: none;
+	transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.sketch-input:focus {
+	transform: scale(1.01);
+	box-shadow: 3px 3px 0 rgba(79, 142, 247, 0.5);
+}
+
+/* Handwritten title font */
+.font-hand {
+	font-family: var(--font-handwritten);
 }

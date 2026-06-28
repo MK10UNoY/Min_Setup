@@ -44,6 +44,8 @@
 	"dependencies": {
 		"@codesandbox/nodebox": "^0.1.8",
 		"@vercel/analytics": "^2.0.1",
-		"monaco-editor": "^0.52.2"
+		"monaco-editor": "^0.52.2",
+		"phosphor-icons": "^1.4.2",
+		"phosphor-svelte": "^3.1.0"
 	}
 }
