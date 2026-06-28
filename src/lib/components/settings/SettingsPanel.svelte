@@ -459,6 +459,7 @@
 		width: 100%;
 		max-width: 650px;
 		height: 480px;
+		max-height: calc(100% - 32px);
 		background: var(--bg-card);
 		border: 2px solid var(--border-color);
 		border-radius: var(--border-radius);
@@ -532,6 +533,7 @@
 		display: flex;
 		flex-direction: column;
 		gap: 6px;
+		overflow-y: auto;
 	}
 
 	.nav-item {

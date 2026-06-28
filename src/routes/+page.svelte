@@ -152,8 +152,8 @@
 	.ide-layout {
 		display: flex;
 		flex-direction: column;
-		height: 100vh;
-		width: 100vw;
+		height: 100%;
+		width: 100%;
 		overflow: hidden;
 		background: var(--bg-page);
 	}

@@ -94,13 +94,23 @@ html[data-motion="reduced"] * {
 	box-sizing: border-box;
 }
 
-html, body {
+html {
 	margin: 0;
 	padding: 0;
 	height: 100%;
 	overflow: hidden;
 	font-family: var(--font-sans);
 	background-color: var(--bg-page);
+	color: var(--text-primary);
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+body {
+	margin: 0;
+	padding: 0;
+	height: 100%;
+	overflow: hidden;
 	transform: scale(var(--ui-scale));
 	transform-origin: top left;
 	width: calc(100% / var(--ui-scale));
@@ -111,9 +121,6 @@ html, body {
 		linear-gradient(rgba(45, 45, 45, 0.03) 1px, transparent 1px),
 		linear-gradient(90deg, rgba(45, 45, 45, 0.03) 1px, transparent 1px);
 	background-size: 20px 20px;
-	color: var(--text-primary);
-	-webkit-font-smoothing: antialiased;
-	-moz-osx-font-smoothing: grayscale;
 	transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease;
 }
 

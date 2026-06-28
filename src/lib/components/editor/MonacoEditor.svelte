@@ -18,8 +18,8 @@
 	let { value, filename, onchange }: Props = $props();
 
 	let editorContainer: HTMLDivElement;
-	let editor: ReturnType<typeof import('monaco-editor').editor.create> | null = null;
-	let monaco: typeof import('monaco-editor') | null = null;
+	let editor: ReturnType<typeof import('monaco-editor').editor.create> | null = $state(null);
+	let monaco: typeof import('monaco-editor') | null = $state(null);
 	let isUpdatingFromProp = false;
 
 	let activeTheme = $derived($settingsStore.theme);
@@ -69,17 +69,27 @@
 
 	// Update Monaco options dynamically when settings change
 	$effect(() => {
+		// Read dependencies unconditionally at the top to register them in the tracking frame
+		const theme = monacoTheme;
+		const fontSize = $settingsStore.editorFontSize;
+		const lineNumbers = $settingsStore.editorLineNumbers;
+		const wordWrap = $settingsStore.editorWordWrap;
+		const minimap = $settingsStore.editorMinimap;
+		const tabSize = $settingsStore.editorTabSize;
+		const cursorStyle = $settingsStore.editorCursorStyle;
+		const cursorBlink = $settingsStore.terminalCursorBlink;
+
 		if (editor && monaco) {
 			editor.updateOptions({
-				fontSize: $settingsStore.editorFontSize,
-				lineNumbers: $settingsStore.editorLineNumbers,
-				wordWrap: $settingsStore.editorWordWrap,
-				minimap: { enabled: $settingsStore.editorMinimap },
-				tabSize: $settingsStore.editorTabSize,
-				cursorStyle: $settingsStore.editorCursorStyle,
-				cursorBlinking: $settingsStore.terminalCursorBlink ? 'blink' : 'solid'
+				fontSize,
+				lineNumbers,
+				wordWrap,
+				minimap: { enabled: minimap },
+				tabSize,
+				cursorStyle,
+				cursorBlinking: cursorBlink ? 'blink' : 'solid'
 			});
-			monaco.editor.setTheme(monacoTheme);
+			monaco.editor.setTheme(theme);
 		}
 	});
 
