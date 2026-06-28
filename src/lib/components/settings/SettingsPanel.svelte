@@ -4,6 +4,7 @@
 	 * Configures Appearance, Editor, Terminal, Workspace, and Accessibility options.
 	 */
 	import { settingsStore } from '$lib/stores/settingsStore';
+	import { FONT_STYLE_OPTIONS } from '$lib/stores/settingsStore';
 	import { uiStore } from '$lib/stores/uiStore';
 	import X from 'phosphor-svelte/lib/X';
 	import Palette from 'phosphor-svelte/lib/Palette';
@@ -130,6 +131,23 @@
 								</select>
 							</div>
 							<p class="description">Adjusts the vertical spacing of the Explorer sidebar files.</p>
+						</div>
+
+						<!-- Font Style -->
+						<div class="setting-group">
+							<label for="setting-font-style">Font Style</label>
+							<div class="select-wrapper">
+								<select 
+									id="setting-font-style" 
+									value={$settingsStore.fontStyle}
+									onchange={(e) => settingsStore.updateSetting('fontStyle', e.currentTarget.value)}
+								>
+									{#each Object.entries(FONT_STYLE_OPTIONS) as [key, opt]}
+										<option value={key}>{opt.label}</option>
+									{/each}
+								</select>
+							</div>
+							<p class="description font-preview" style="font-family: {FONT_STYLE_OPTIONS[$settingsStore.fontStyle]?.family || 'inherit'}; font-size: 16px;">The quick brown fox jumps over the lazy dog</p>
 						</div>
 
 						<!-- UI Scale -->

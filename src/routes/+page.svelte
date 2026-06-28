@@ -19,6 +19,7 @@
 	// Terminal resize state
 	let isResizing = $state(false);
 	let isResizingSidebar = $state(false);
+	let isResizingPreview = $state(false);
 	let mainContainer: HTMLDivElement;
 
 	function handleResizeStart(e: MouseEvent) {
@@ -62,6 +63,29 @@
 
 		function handleMouseUp() {
 			isResizingSidebar = false;
+			window.removeEventListener('mousemove', handleMouseMove);
+			window.removeEventListener('mouseup', handleMouseUp);
+		}
+
+		window.addEventListener('mousemove', handleMouseMove);
+		window.addEventListener('mouseup', handleMouseUp);
+	}
+
+	function handlePreviewResizeStart(e: MouseEvent) {
+		e.preventDefault();
+		isResizingPreview = true;
+		const startX = e.clientX;
+		let startWidth: number;
+
+		uiStore.subscribe((s) => (startWidth = s.previewWidth))();
+
+		function handleMouseMove(ev: MouseEvent) {
+			const deltaX = startX - ev.clientX;
+			uiStore.setPreviewWidth(startWidth + deltaX);
+		}
+
+		function handleMouseUp() {
+			isResizingPreview = false;
 			window.removeEventListener('mousemove', handleMouseMove);
 			window.removeEventListener('mouseup', handleMouseUp);
 		}
@@ -115,7 +139,15 @@
 					<div class="editor-main">
 						<EditorPanel bind:this={editorPanelRef} />
 					</div>
-					{#if $uiStore.previewOpen}
+					{#if $uiStore.previewOpen && $uiStore.previewMode === 'sidebar'}
+						<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+						<div
+							class="resize-handle-v"
+							class:resizing={isResizingPreview}
+							role="separator"
+							aria-orientation="vertical"
+							onmousedown={handlePreviewResizeStart}
+						></div>
 						<PreviewPanel />
 					{/if}
 				</div>

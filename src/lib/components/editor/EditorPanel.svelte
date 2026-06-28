@@ -6,6 +6,7 @@
 	import EditorTabs from './EditorTabs.svelte';
 	import Breadcrumb from './Breadcrumb.svelte';
 	import MonacoEditor from './MonacoEditor.svelte';
+	import PreviewPanel from '../preview/PreviewPanel.svelte';
 	import { editorStore } from '$lib/stores/editorStore';
 	import { fileStore } from '$lib/stores/fileStore';
 
@@ -35,7 +36,9 @@
 	<Breadcrumb />
 
 	<div class="editor-content">
-		{#if activeFile}
+		{#if $editorStore.activeFilePath === 'preview'}
+			<PreviewPanel />
+		{:else if activeFile}
 			{#key activeFile.path}
 				<MonacoEditor
 					bind:this={monacoRef}

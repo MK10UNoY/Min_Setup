@@ -9,6 +9,7 @@
 	import { terminalStore, type TerminalTab } from '$lib/stores/terminalStore';
 	import { executionStore } from '$lib/stores/executionStore';
 	import { uiStore } from '$lib/stores/uiStore';
+	import PreviewPanel from '../preview/PreviewPanel.svelte';
 	import Eraser from 'phosphor-svelte/lib/Eraser';
 	import CaretDown from 'phosphor-svelte/lib/CaretDown';
 	import HourglassMedium from 'phosphor-svelte/lib/HourglassMedium';
@@ -22,7 +23,8 @@
 	const tabs: { id: TerminalTab; label: string }[] = [
 		{ id: 'output', label: 'Output' },
 		{ id: 'terminal', label: 'Terminal' },
-		{ id: 'problems', label: 'Problems' }
+		{ id: 'problems', label: 'Problems' },
+		{ id: 'preview', label: 'Preview 🌐' }
 	];
 
 	function handleClear() {
@@ -46,7 +48,12 @@
 				<button
 					class="terminal-tab"
 					class:active={$terminalStore.activeTab === tab.id}
-					onclick={() => terminalStore.setActiveTab(tab.id)}
+					onclick={() => {
+						terminalStore.setActiveTab(tab.id);
+						if (tab.id === 'preview') {
+							uiStore.setPreviewMode('bottom');
+						}
+					}}
 				>
 					{tab.label}
 					{#if tab.id === 'problems' && errorCount > 0}
@@ -89,6 +96,10 @@
 		{:else if $terminalStore.activeTab === 'terminal'}
 			<TerminalOutput />
 			<TerminalInput />
+		{:else if $terminalStore.activeTab === 'preview'}
+			<div class="terminal-preview-container">
+				<PreviewPanel />
+			</div>
 		{:else}
 			<div class="problems-tab">
 				{#if errorCount > 0}
@@ -305,5 +316,13 @@
 		font-size: 14px;
 		font-family: var(--font-handwritten);
 		padding: 8px 0;
+	}
+
+	.terminal-preview-container {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		height: 100%;
+		overflow: hidden;
 	}
 </style>

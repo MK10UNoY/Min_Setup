@@ -5,6 +5,7 @@
 	 * Supports horizontal scroll via mouse wheel when tabs overflow.
 	 */
 	import { editorStore } from '$lib/stores/editorStore';
+	import { uiStore } from '$lib/stores/uiStore';
 	import { getFileColor } from '$lib/utils/fileTypes';
 	import X from 'phosphor-svelte/lib/X';
 	import Circle from 'phosphor-svelte/lib/Circle';
@@ -75,6 +76,46 @@
 			</button>
 		</div>
 	{/each}
+
+	{#if $uiStore.previewOpen && $uiStore.previewMode === 'tab'}
+		<!-- svelte-ignore a11y_no_static_element_interactions -->
+		<div
+			class="tab"
+			class:active={$editorStore.activeFilePath === 'preview'}
+			role="tab"
+			tabindex="0"
+			aria-selected={$editorStore.activeFilePath === 'preview'}
+			onclick={() => {
+				editorStore.setActive('preview');
+				uiStore.setPreviewMode('tab');
+			}}
+			onkeydown={(e) => e.key === 'Enter' && editorStore.setActive('preview')}
+			title="Live Preview"
+		>
+			<span class="tab-dot" style="color: #10b981">
+				<Circle size={8} weight="fill" />
+			</span>
+			<span class="tab-name">Preview 🌐</span>
+			<button
+				class="tab-close"
+				onclick={(e) => {
+					e.stopPropagation();
+					uiStore.togglePreview();
+					if ($editorStore.activeFilePath === 'preview') {
+						if ($editorStore.openTabs.length > 0) {
+							editorStore.setActive($editorStore.openTabs[0].path);
+						} else {
+							editorStore.setActive(null);
+						}
+					}
+				}}
+				title="Close Preview"
+				aria-label="Close Preview"
+			>
+				<X size={12} />
+			</button>
+		</div>
+	{/if}
 </div>
 
 <style>

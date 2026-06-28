@@ -11,7 +11,7 @@ export interface TerminalLine {
 	timestamp: number;
 }
 
-export type TerminalTab = 'output' | 'terminal' | 'problems';
+export type TerminalTab = 'output' | 'terminal' | 'problems' | 'preview';
 
 export interface TerminalStoreState {
 	lines: TerminalLine[];

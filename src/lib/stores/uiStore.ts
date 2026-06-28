@@ -10,6 +10,8 @@ export interface UIStoreState {
 	settingsOpen: boolean;
 	terminalHeight: number; // percentage of viewport
 	sidebarWidth: number; // pixels
+	previewWidth: number; // pixels
+	previewMode: 'sidebar' | 'tab' | 'bottom' | 'detached';
 	selectedLanguage: string; // '' = show all, otherwise filter key like 'javascript', 'python', etc.
 }
 
@@ -21,6 +23,8 @@ function createUIStore() {
 		settingsOpen: false,
 		terminalHeight: 30,
 		sidebarWidth: 240,
+		previewWidth: 400,
+		previewMode: 'sidebar',
 		selectedLanguage: ''
 	});
 
@@ -83,6 +87,23 @@ function createUIStore() {
 			});
 		},
 
+		setPreviewWidth(width: number) {
+			update((state) => {
+				state.previewWidth = Math.max(200, Math.min(800, width));
+				return state;
+			});
+		},
+
+		setPreviewMode(mode: 'sidebar' | 'tab' | 'bottom' | 'detached') {
+			update((state) => {
+				state.previewMode = mode;
+				if (mode === 'detached' || mode === 'tab' || mode === 'bottom') {
+					state.previewOpen = true; // ensure it is considered open/active in that layout
+				}
+				return state;
+			});
+		},
+
 		setSelectedLanguage(language: string) {
 			update((state) => {
 				state.selectedLanguage = language;
@@ -98,6 +119,8 @@ function createUIStore() {
 				settingsOpen: false,
 				terminalHeight: 30,
 				sidebarWidth: 240,
+				previewWidth: 400,
+				previewMode: 'sidebar',
 				selectedLanguage: ''
 			});
 		}

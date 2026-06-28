@@ -4,6 +4,7 @@ export interface SettingsState {
 	theme: 'system' | 'light' | 'dark';
 	accentColor: string; // HSL primary color values or classes
 	sidebarDensity: 'compact' | 'comfortable';
+	fontStyle: string; // key for the UI font family
 	editorFontSize: number;
 	editorLineNumbers: 'on' | 'off';
 	editorWordWrap: 'on' | 'off';
@@ -25,10 +26,23 @@ export interface SettingsState {
 	roundedCorners: string;
 }
 
+/** Font style options — maps keys to CSS font-family stacks */
+export const FONT_STYLE_OPTIONS: Record<string, { label: string; family: string }> = {
+	'patrick-hand': { label: 'Patrick Hand (Sketchbook)', family: "'Patrick Hand', cursive" },
+	'kalam': { label: 'Kalam (Handwritten)', family: "'Kalam', cursive" },
+	'caveat': { label: 'Caveat (Casual Script)', family: "'Caveat', cursive" },
+	'nunito': { label: 'Nunito (Rounded Sans)', family: "'Nunito', sans-serif" },
+	'inter': { label: 'Inter (Clean Sans)', family: "'Inter', sans-serif" },
+	'comic-neue': { label: 'Comic Neue (Fun)', family: "'Comic Neue', cursive" },
+	'architects-daughter': { label: 'Architects Daughter (Blueprint)', family: "'Architects Daughter', cursive" },
+	'indie-flower': { label: 'Indie Flower (Doodle)', family: "'Indie Flower', cursive" },
+};
+
 const DEFAULT_SETTINGS: SettingsState = {
 	theme: 'system',
 	accentColor: 'blue',
 	sidebarDensity: 'comfortable',
+	fontStyle: 'patrick-hand',
 	editorFontSize: 14,
 	editorLineNumbers: 'on',
 	editorWordWrap: 'on',
@@ -160,6 +174,12 @@ function applySettings(state: SettingsState) {
 	root.style.setProperty('--ui-scale', state.uiScale.toString());
 	root.style.setProperty('--border-radius', state.roundedCorners);
 	root.style.setProperty('--terminal-font-size', `${state.terminalFontSize}px`);
+
+	// Font style
+	const fontOption = FONT_STYLE_OPTIONS[state.fontStyle];
+	if (fontOption) {
+		root.style.setProperty('--font-handwritten', fontOption.family);
+	}
 }
 
 // Watch system theme change if set to system
